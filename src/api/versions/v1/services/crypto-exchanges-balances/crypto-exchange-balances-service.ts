@@ -487,36 +487,31 @@ export class CryptoExchangeBalancesService {
    * Calculate after-tax value for all crypto exchange balances
    */
   public async calculateAllCryptoBalances(): Promise<void> {
-    try {
-      const db = this.databaseService.get();
+    const db = this.databaseService.get();
 
-      // Get all crypto exchange balances
-      const balances = await db
-        .select({
-          cryptoExchangeId: cryptoExchangeBalancesTable.cryptoExchangeId,
-          symbolCode: cryptoExchangeBalancesTable.symbolCode,
-        })
-        .from(cryptoExchangeBalancesTable);
+    // Get all crypto exchange balances
+    const balances = await db
+      .select({
+        cryptoExchangeId: cryptoExchangeBalancesTable.cryptoExchangeId,
+        symbolCode: cryptoExchangeBalancesTable.symbolCode,
+      })
+      .from(cryptoExchangeBalancesTable);
 
-      console.log(`Processing ${balances.length} crypto balances`);
+    console.log(`Processing ${balances.length} crypto balances`);
 
-      // Calculate value after tax for each balance
-      for (const balance of balances) {
-        try {
-          await this.calculateCryptoValueAfterTax(
-            balance.cryptoExchangeId,
-            balance.symbolCode,
-          );
-        } catch (error) {
-          console.error(
-            `Failed to calculate crypto balance for exchange ${balance.cryptoExchangeId} symbol ${balance.symbolCode}:`,
-            error,
-          );
-        }
+    // Calculate value after tax for each balance
+    for (const balance of balances) {
+      try {
+        await this.calculateCryptoValueAfterTax(
+          balance.cryptoExchangeId,
+          balance.symbolCode,
+        );
+      } catch (error) {
+        console.error(
+          `Failed to calculate crypto balance for exchange ${balance.cryptoExchangeId} symbol ${balance.symbolCode}:`,
+          error,
+        );
       }
-    } catch (error) {
-      console.error("Error calculating crypto balances:", error);
-      throw error;
     }
   }
 }

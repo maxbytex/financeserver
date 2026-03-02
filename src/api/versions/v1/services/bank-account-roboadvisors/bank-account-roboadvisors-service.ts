@@ -1210,30 +1210,25 @@ export class BankAccountRoboadvisorsService {
    * Calculate after-tax value for all roboadvisors
    */
   public async calculateAllRoboadvisors(): Promise<void> {
-    try {
-      const db = this.databaseService.get();
+    const db = this.databaseService.get();
 
-      // Get all roboadvisors
-      const allRoboadvisors = await db
-        .select({ id: roboadvisors.id })
-        .from(roboadvisors);
+    // Get all roboadvisors
+    const allRoboadvisors = await db
+      .select({ id: roboadvisors.id })
+      .from(roboadvisors);
 
-      console.log(`Processing ${allRoboadvisors.length} roboadvisors`);
+    console.log(`Processing ${allRoboadvisors.length} roboadvisors`);
 
-      // Calculate value after tax for each roboadvisor
-      for (const roboadvisor of allRoboadvisors) {
-        try {
-          await this.calculateRoboadvisorValueAfterTax(roboadvisor.id);
-        } catch (error) {
-          console.error(
-            `Failed to calculate roboadvisor ${roboadvisor.id}:`,
-            error,
-          );
-        }
+    // Calculate value after tax for each roboadvisor
+    for (const roboadvisor of allRoboadvisors) {
+      try {
+        await this.calculateRoboadvisorValueAfterTax(roboadvisor.id);
+      } catch (error) {
+        console.error(
+          `Failed to calculate roboadvisor ${roboadvisor.id}:`,
+          error,
+        );
       }
-    } catch (error) {
-      console.error("Error calculating roboadvisors:", error);
-      throw error;
     }
   }
 }

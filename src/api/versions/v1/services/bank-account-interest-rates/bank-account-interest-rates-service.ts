@@ -515,65 +515,55 @@ export class BankAccountInterestRatesService {
    * Calculate after-tax interest for all bank accounts with active interest rates
    */
   public async calculateAllBankAccountInterestRates(): Promise<void> {
-    try {
-      const db = this.databaseService.get();
+    const db = this.databaseService.get();
 
-      // Import here to avoid circular dependency
-      const { bankAccountBalancesTable } = await import(
-        "../../../../../db/schema.ts"
-      );
-
-      // Get all bank accounts with their latest balances using a subquery
-      const latestBalances = db.$with("latest_balances").as(
-        db
-          .select({
-            bankAccountId: bankAccountBalancesTable.bankAccountId,
-            balance: bankAccountBalancesTable.balance,
-            currencyCode: bankAccountBalancesTable.currencyCode,
-            createdAt: bankAccountBalancesTable.createdAt,
-            id: bankAccountBalancesTable.id,
-            rowNumber: sql<
-              number
-            >`ROW_NUMBER() OVER (PARTITION BY ${bankAccountBalancesTable.bankAccountId} ORDER BY ${bankAccountBalancesTable.createdAt} DESC, ${bankAccountBalancesTable.id} DESC)`
-              .as(
-                "row_number",
-              ),
-          })
-          .from(bankAccountBalancesTable),
-      );
-
-      const bankAccountsWithBalances = await db
-        .with(latestBalances)
+    // Get all bank accounts with their latest balances using a subquery
+    const latestBalances = db.$with("latest_balances").as(
+      db
         .select({
-          bankAccountId: latestBalances.bankAccountId,
-          balance: latestBalances.balance,
-          currencyCode: latestBalances.currencyCode,
+          bankAccountId: bankAccountBalancesTable.bankAccountId,
+          balance: bankAccountBalancesTable.balance,
+          currencyCode: bankAccountBalancesTable.currencyCode,
+          createdAt: bankAccountBalancesTable.createdAt,
+          id: bankAccountBalancesTable.id,
+          rowNumber: sql<
+            number
+          >`ROW_NUMBER() OVER (PARTITION BY ${bankAccountBalancesTable.bankAccountId} ORDER BY ${bankAccountBalancesTable.createdAt} DESC, ${bankAccountBalancesTable.id} DESC)`
+            .as(
+              "row_number",
+            ),
         })
-        .from(latestBalances)
-        .where(eq(latestBalances.rowNumber, 1));
+        .from(bankAccountBalancesTable),
+    );
 
-      console.log(
-        `Processing ${bankAccountsWithBalances.length} bank accounts with interest rates`,
-      );
+    const bankAccountsWithBalances = await db
+      .with(latestBalances)
+      .select({
+        bankAccountId: latestBalances.bankAccountId,
+        balance: latestBalances.balance,
+        currencyCode: latestBalances.currencyCode,
+      })
+      .from(latestBalances)
+      .where(eq(latestBalances.rowNumber, 1));
 
-      // Calculate interest after tax for each account
-      for (const account of bankAccountsWithBalances) {
-        try {
-          await this.calculateInterestAfterTax(
-            account.bankAccountId,
-            account.balance,
-            account.currencyCode,
-          );
-        } catch (error) {
-          console.error(
-            `Failed to calculate interest for bank account ${account.bankAccountId}:`,
-            error,
-          );
-        }
+    console.log(
+      `Processing ${bankAccountsWithBalances.length} bank accounts with interest rates`,
+    );
+
+    // Calculate interest after tax for each account
+    for (const account of bankAccountsWithBalances) {
+      try {
+        await this.calculateInterestAfterTax(
+          account.bankAccountId,
+          account.balance,
+          account.currencyCode,
+        );
+      } catch (error) {
+        console.error(
+          `Failed to calculate interest for bank account ${account.bankAccountId}:`,
+          error,
+        );
       }
-    } catch (error) {
-      console.error("Error calculating bank account interest rates:", error);
-      throw error;
     }
   }
 
