@@ -10,8 +10,9 @@ OpenAPI-documented API and MCP tools.
 Follow the steps below after using the Deploy button above this section:
 
 1. On the Deno Deploy project page, go to Settings → Environment Variables.
-2. Drag and drop the `.env.example` file from this repository onto the
-  Environment Variables panel, or click Import and select the file.
+2. Copy `.env.example` to `.env` (Deno Deploy requires the `.env` extension when importing).
+3. Drag and drop the `.env` file onto the Environment Variables panel, or click
+  Import and select the file.
 
 ### Database configuration
 
